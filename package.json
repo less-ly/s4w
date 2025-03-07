@@ -1,0 +1,29 @@
+{
+  "name": "S4W",
+  "author": "m1k",
+  "version": "1.0.0",
+  "keywords": ["pebble-watchface", "solar-system", "simulation", "simple"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "main": {
+      "rockyjs": "src/rocky/index.js",
+      "pkjs": "src/pkjs/index.js"
+    },
+    "displayName": "S4W",
+    "uuid": "494b06f9-5c8d-4fda-8559-bbc9edb19a7a",
+    "projectType": "rocky",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatform": [
+      "basalt",
+      "chalk"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "resources": {
+      "media": []
+    }
+  }
+}
