@@ -7,9 +7,6 @@ var rocky = require('rocky');
 // debug value
 var timeCycle = 'secondchange';
 
-// epoch - January 1, 1970, UTC - sets a starting position for Earth, i.e. its 'midnight' position
-var epoch = new Date(0);
-
 // Set a background color
 //var backgroundColor = '#FFFFFF'; // white
 var backgroundColor = '#000000'; // black
@@ -17,12 +14,12 @@ var backgroundColor = '#000000'; // black
 // Add celestial info
 // set periods of revolution ratios (calculated in days)
 var mercuryToEarthRevRatio = 87.969/365; 
-var venusToEarthRevRatio = 224.7/365;
-var earthToEarthRevRatio = 1;
-var marsToEarthRevRatio = 686.94/365;
+var venusToEarthRevRatio   = 224.7/365;
+var earthToEarthRevRatio   = 1;
+var marsToEarthRevRatio    = 686.94/365;
 var jupiterToEarthRevRatio = 4330.6/365;
-var saturnToEarthRevRatio = 10755.7/365;
-var uranusToEarthRevRatio = 30687/365;
+var saturnToEarthRevRatio  = 10755.7/365;
+var uranusToEarthRevRatio  = 30687/365;
 var neptuneToEarthRevRatio = 60195/365;
 
 // Set colors for celestial bodies
@@ -70,13 +67,34 @@ function drawSolar(ctx, cx, cy, d, radius, planetColorArray, planetSize, orbitSt
   // but do mind that arrays start from the 0th index
   var index = 0;
 
+  // the epoch will be the common start time of a simulation
+  var e = new Date ();
+  e.setFullYear(0);
+  // get epoch's year
+  var startYear    = e.getFullYear();
+  // the current year will be needed for an offset from the epoch
+  var currentYear  = d.getFullYear();
+  // get an offset in years from the epoch till the current year
+  var yearsOffset  = currentYear - startYear;
+
   while (step < orbitStepNum + 1) {
-    // pick a color from the upcoming planet
+    // set revolution ratio
+    var revRatio = 1 / planetToEarthRevArray[index];
+    // pick a color for the upcoming planet
     var planetColor = planetColorArray[index];
-    //var earthRevFraction = 1;
-    var earthRevFraction = d.getMonth() / 12;
+
+    // make Mercury happy, account for days passed
+    var daysEarthFraction = d.getDate() / 30;
+    // and for a fraction of days passed along with months elapsed
+    var earthRevFraction = ((d.getMonth() + 1) % 12 + daysEarthFraction) / 12;
+    // provide offset in years
+    var earthRevFraction = earthRevFraction + yearsOffset * 12;
+    // drawPlanet works with radians, not degrees
     var earthAngle = fractionToRadian(earthRevFraction);
-    var planetAngle = earthAngle / planetToEarthRevArray[index];
+
+    // pick an orbital angle for the next planet
+    var planetAngle = earthAngle * revRatio;
+    // pay respect to Saturn, add years gone by since common time anchor - the epoch
 
     drawOrbit(ctx, cx, cy, radius * step, planetColor)
     drawPlanet(ctx, cx, cy, planetAngle, radius * step, planetColor, planetSize)
@@ -144,66 +162,6 @@ rocky.on('draw', function(event) {
   drawSun(ctx, cx, cy, sunColor, sunRadius);
   
   drawSolar(ctx, cx, cy, d, minLength, planetColorArray, planetSize, orbitStepNum);
-
-/*
-  // -
-  // Calculate the "seconds hand", i.e. the 1st planet's angle
-  var secondsFraction = (d.getSeconds() / 60);
-  var secondsAngle = fractionToRadian(secondsFraction);
-
-  // Draw the "seconds hand", i.e. the 1st planet from the Sun
-  drawPlanet(ctx, cx, cy, secondsAngle, minLength * 2, mercuryColor, planetSize);
-  // -
-
-  // --
-  // Calculate the "minutes hand", i.e. the 2nd planet's angle
-  var minutesFraction = (d.getMinutes() % 60 + secondsFraction) / 60;
-  var minutesAngle = fractionToRadian(minutesFraction);
-
-  // Draw the "minutes hand", i.e. the 2nd planet from the Sun
-  drawPlanet(ctx, cx, cy, minutesAngle, minLength * 3, venusColor, planetSize);
-  // --
-
-  // --
-  // Calculate the "hours hand", i.e. the 3rd planet's angle
-  var hoursFraction = (d.getHours() % 12 + minutesFraction) / 12;
-  var hoursAngle = fractionToRadian(hoursFraction);
-
-  // Draw the "hours hand", i.e. the 3rd planet from the Sun
-  drawPlanet(ctx, cx, cy, hoursAngle, minLength * 4, earthColor, planetSize);
-  // ---
-
-  // ----
-  // Calcualte the "days hand", i.e. the 4th planet's angle - building things up
-  var daysFraction = d.getDate() / 30;
-  var daysAngle = fractionToRadian(daysFraction);
-  
-  // Draw the "days hand", i.e. the 4th planets' angle - building things up
-  drawPlanet(ctx, cx, cy, daysAngle, minLength * 5, marsColor, planetSize);
-  // ----
-
-  // -----
-  // Calcualte the "months hand", i.e. the 5th planet's angle - building things up
-  var monthsFraction = d.getMonth() / 12;
-  var monthsAngle = fractionToRadian(monthsFraction);
-  
-  // Draw the "months hand", i.e. the 5th planets' angle - building things up
-  drawPlanet(ctx, cx, cy, monthsAngle, minLength * 6, jupiterColor, planetSize);
-  // -----
-
-  // ------
-  // Calcualte the "Mars hand", i.e. the 6th planet's angle - building things up
-  var jupiterConstant = 1/12;
-  var monthsFraction = d.getMonth() / 12 * jupiterConstant;
-  var monthsAngle = fractionToRadian(monthsFraction);
-  
-  // Draw the "months hand", i.e. the 6th planets' angle - building things up
-  drawPlanet(ctx, cx, cy, monthsAngle, minLength * 7, jupiterColor, planetSize);
-  // ------
-  // Draw orbits (legacy)
-  // drawOrbits(ctx, cx, cy, minLength, orbitStepNum, planetColor);
-*/
-
 });
 
 rocky.on(timeCycle, function(event) {
