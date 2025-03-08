@@ -11,7 +11,8 @@ var timeCycle = 'secondchange';
 var epoch = new Date(0);
 
 // Set a background color
-var backgroundColor = '#FFFFFF'; // white
+//var backgroundColor = '#FFFFFF'; // white
+var backgroundColor = '#000000'; // black
 
 // Add celestial info
 // set periods of revolution ratios (calculated in days)
@@ -22,62 +23,66 @@ var marsToEarthRevRatio = 686.94/365;
 var jupiterToEarthRevRatio = 4330.6/365;
 var saturnToEarthRevRatio = 10755.7/365;
 var uranusToEarthRevRatio = 30687/365;
-var neptunetoEarthRevRatio = 60195/365;
+var neptuneToEarthRevRatio = 60195/365;
 
-// set colors for celestial bodies
+// Set colors for celestial bodies
+// - hex values to minimize compiler whims -
+// for Sun
 var sunColor = '#FF5500'; // orange
+// and planets
 var mercuryColor = '#AAAAAA'; // light grey
-var venusColor = '#AAAA55'; // brass
-var earthColor = '#55AAFF'; // picton blue
-var marsColor = '#FF0000'; // red
+var venusColor   = '#AAAA00'; // limerick
+var earthColor   = '#55AAFF'; // picton blue
+var marsColor    = '#FF0000'; // red
 var jupiterColor = '#AA5500'; // windsor tan
-var saturnColor = '#FFFF00'; // yellow
-var uranusColor = '#00FF55'; // malachite
+var saturnColor  = '#FFFF00'; // yellow
+var uranusColor  = '#00AA55'; // jaegar green
 var neptuneColor = '#AA55FF'; // lavender indigo
 
-// set a single color for the planets (legacy)
-var planetColor = '#000000'; // black
-
 // set the size of the planets
-var planetSize = 3;
-
-// set number of orbits and consider the Sun's radius as taking up a space of an orbit
-var orbitStepNum = planetNames.length + 1;
+var planetSize = 4;
 
 // START - parallel arrays with planetray info -
-const planetNameArray = ["Mercury", "Venus",   "Earth",
-                         "Mars",    "Jupiter", "Saturn",
-                         "Uranus",  "Neptune"];
+var planetNameArray = ["Mercury", "Venus",   "Earth",
+                       "Mars",    "Jupiter", "Saturn",
+                       "Uranus",  "Neptune"];
 
-const planetColorArray = [mercuryColor, venusColor,   earthColor,
-                          marsColor,    jupiterColor, saturnColor,
-                          uranusColor,  neptuneColor];
+var planetColorArray = [mercuryColor, venusColor,   earthColor,
+                        marsColor,    jupiterColor, saturnColor,
+                        uranusColor,  neptuneColor];
 
-const planetToEarthRatioArray = [mercuryToEarthRevRatio, venusToEarthRevRatio,
-                                 earthToEarthRevRatio,   marsToEarthRevRatio,
-                                 jupiterToEarthRevRatio, saturnToEarthRevRatio,
-                                 uranusToEarthRevRatio,  neptuneToEarthRevRatio];
+var planetToEarthRevArray = [mercuryToEarthRevRatio, venusToEarthRevRatio,
+                             earthToEarthRevRatio,   marsToEarthRevRatio,
+                             jupiterToEarthRevRatio, saturnToEarthRevRatio,
+                             uranusToEarthRevRatio,  neptuneToEarthRevRatio];
+
 // END - parallel arrays with planetary orbital info -
+
+// set number of orbits and consider the Sun's radius as taking up a space of an orbit
+var orbitStepNum = planetNameArray.length + 1;
 
 // Onto function definitions
 
 // Draws planets and their orbits one by one
-function drawSolar(ctx, cx, cy, radius, planetColorArray, planetSize) {
+function drawSolar(ctx, cx, cy, d, radius, planetColorArray, planetSize, orbitStepNum) {
   // take a few steps away from the Sun
   var step = 2;
   // but do mind that arrays start from the 0th index
   var index = 0;
-  // get a number of planetary orbits to deal with
-  var orbitStepNum = planetColorArray.length;
 
-  while (step < orbitsStepNum +1) {
+  while (step < orbitStepNum + 1) {
     // pick a color from the upcoming planet
     var planetColor = planetColorArray[index];
+    //var earthRevFraction = 1;
+    var earthRevFraction = d.getMonth() / 12;
+    var earthAngle = fractionToRadian(earthRevFraction);
+    var planetAngle = earthAngle / planetToEarthRevArray[index];
 
-    drawOrbit(ctx, cx, cy, radius, orbitColor)
-    drawPlanet(ctx, cx, cy, angle, radius, planetColor, planetSize)
+    drawOrbit(ctx, cx, cy, radius * step, planetColor)
+    drawPlanet(ctx, cx, cy, planetAngle, radius * step, planetColor, planetSize)
 
     step++;
+    index++;
 }};
 
 // Draws a single planetary orbit
@@ -134,35 +139,13 @@ rocky.on('draw', function(event) {
   // Current date/time
   var d = new Date();
 
-  // Set the text color
-  //ctx.fillStyle = 'black';
-
-  // Center align the text
-  //ctx.textAlign = 'center';
-
-  // Set the font
-  //ctx.font = '9px Gothic'
-
-  // Get the current day of the month in 2-digit format
-  //var day = d.toLocaleTimeString(undefined, {day: '2-digit'});
-  //day = day.substring(0, 2);
-
-  // uncomment if need to adjust the planets' location and want and actual time reference
-  // ctx.font = '10px Gothic'
-  //var time = epoch.toLocaleTimeString(undefined, {year: 'numeric'});
-
-  // adjust the central height for the text
-  //var text_cy = cy - 9 / 3 * 2 ;
-
-  // Display the current date, in the middle of the screen
-  //ctx.fillText(time, cx, text_cy, w);
-
-  // ctx.fillText(d.getDate().toString(), w / 2, h / 2, w);
-  // getDate() doesn't put a preceding zero into 1-digit dates 
-
   var sunRadius = minLength;
-  drawSun(ctx, cx, cy, sunColor, sunRadius);
 
+  drawSun(ctx, cx, cy, sunColor, sunRadius);
+  
+  drawSolar(ctx, cx, cy, d, minLength, planetColorArray, planetSize, orbitStepNum);
+
+/*
   // -
   // Calculate the "seconds hand", i.e. the 1st planet's angle
   var secondsFraction = (d.getSeconds() / 60);
@@ -217,9 +200,9 @@ rocky.on('draw', function(event) {
   // Draw the "months hand", i.e. the 6th planets' angle - building things up
   drawPlanet(ctx, cx, cy, monthsAngle, minLength * 7, jupiterColor, planetSize);
   // ------
-
   // Draw orbits (legacy)
   // drawOrbits(ctx, cx, cy, minLength, orbitStepNum, planetColor);
+*/
 
 });
 
