@@ -2,7 +2,7 @@
   "name": "S4W",
   "author": "m1k",
   "version": "1.0.0",
-  "keywords": ["pebble-watchface", "solar-system", "simulation", "simple"],
+  "keywords": ["pebble-watchface", "solar-system", "simulation", "simple", "space"],
   "private": true,
   "dependencies": {},
   "pebble": {
@@ -15,7 +15,7 @@
     "projectType": "rocky",
     "sdkVersion": "3",
     "enableMultiJS": true,
-    "targetPlatform": [
+    "targetPlatforms": [
       "basalt",
       "chalk"
     ],

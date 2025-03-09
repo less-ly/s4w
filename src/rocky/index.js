@@ -2,10 +2,10 @@ var rocky = require('rocky');
 
 // Adjust the frequence of changes to the watchface
 // default value (for the project)
-//var timeCycle = 'daychange';
+var timeCycle = 'daychange';
 
 // debug value
-var timeCycle = 'secondchange';
+//var timeCycle = 'secondchange';
 
 // Set a background color
 //var backgroundColor = '#FFFFFF'; // white
@@ -15,12 +15,22 @@ var backgroundColor = '#000000'; // black
 // set periods of revolution ratios (calculated in days)
 var mercuryToEarthRevRatio = 87.969/365; 
 var venusToEarthRevRatio   = 224.7/365;
-var earthToEarthRevRatio   = 1;
+var earthToEarthRevRatio   = 1; // reference value
 var marsToEarthRevRatio    = 686.94/365;
 var jupiterToEarthRevRatio = 4330.6/365;
 var saturnToEarthRevRatio  = 10755.7/365;
 var uranusToEarthRevRatio  = 30687/365;
 var neptuneToEarthRevRatio = 60195/365;
+
+// set mean anomalies - initial angular position at epoch, 1 January 1970, for planets
+var mercuryEpochAngle = 301.72;
+var venusEpochAngle   = 275.33;
+var earthEpochAngle   = 0; // reference value
+var marsEpochAngle    = 344.33;
+var jupiterEpochAngle = 210.97;
+var saturnEpochAngle  = 31.17;
+var uranusEpochAngle  = 188.68;
+var neptuneEpochAngle = 238.51;
 
 // Set colors for celestial bodies
 // - hex values to minimize compiler whims -
@@ -53,6 +63,12 @@ var planetToEarthRevArray = [mercuryToEarthRevRatio, venusToEarthRevRatio,
                              jupiterToEarthRevRatio, saturnToEarthRevRatio,
                              uranusToEarthRevRatio,  neptuneToEarthRevRatio];
 
+var planetEpochAngleArray = [mercuryEpochAngle, venusEpochAngle,
+                             earthEpochAngle,   marsEpochAngle,    
+                             jupiterEpochAngle, saturnEpochAngle,
+                             uranusEpochAngle,  neptuneEpochAngle];
+
+
 // END - parallel arrays with planetary orbital info -
 
 // set number of orbits and consider the Sun's radius as taking up a space of an orbit
@@ -61,7 +77,7 @@ var orbitStepNum = planetNameArray.length + 1;
 // Onto function definitions
 
 // Draws planets and their orbits one by one
-function drawSolar(ctx, cx, cy, d, radius, planetColorArray, planetSize, orbitStepNum) {
+function drawSolar(ctx, cx, cy, d, radius, planetColorArray, planetEpochAngleArray, planetSize, orbitStepNum) {
   // take a few steps away from the Sun
   var step = 2;
   // but do mind that arrays start from the 0th index
@@ -87,8 +103,10 @@ function drawSolar(ctx, cx, cy, d, radius, planetColorArray, planetSize, orbitSt
     var daysEarthFraction = d.getDate() / 30;
     // and for a fraction of days passed along with months elapsed
     var earthRevFraction = ((d.getMonth() + 1) % 12 + daysEarthFraction) / 12;
-    // provide offset in years
-    var earthRevFraction = earthRevFraction + yearsOffset * 12;
+    // set initial angular position, i.e. at epoch
+    earthRevFraction = earthRevFraction + planetEpochAngleArray[index];
+    // provide offset in terms of months 
+    earthRevFraction = earthRevFraction + yearsOffset * 12;
     // drawPlanet works with radians, not degrees
     var earthAngle = fractionToRadian(earthRevFraction);
 
@@ -96,9 +114,14 @@ function drawSolar(ctx, cx, cy, d, radius, planetColorArray, planetSize, orbitSt
     var planetAngle = earthAngle * revRatio;
     // pay respect to Saturn, add years gone by since common time anchor - the epoch
 
-    drawOrbit(ctx, cx, cy, radius * step, planetColor)
-    drawPlanet(ctx, cx, cy, planetAngle, radius * step, planetColor, planetSize)
-
+    // make orbit adjustments for Round displays - dirty version
+    if (cx * 2 != cy * 2) {
+      drawOrbit(ctx, cx, cy, radius * step, planetColor);
+      drawPlanet(ctx, cx, cy, planetAngle, radius * step, planetColor, planetSize);
+    } else {
+      drawOrbit(ctx, cx, cy, radius * step - 4, planetColor);
+      drawPlanet(ctx, cx, cy, planetAngle, radius * step - 4, planetColor, planetSize);
+    } 
     step++;
     index++;
 }};
@@ -161,7 +184,7 @@ rocky.on('draw', function(event) {
 
   drawSun(ctx, cx, cy, sunColor, sunRadius);
   
-  drawSolar(ctx, cx, cy, d, minLength, planetColorArray, planetSize, orbitStepNum);
+  drawSolar(ctx, cx, cy, d, minLength, planetColorArray, planetEpochAngleArray, planetSize, orbitStepNum);
 });
 
 rocky.on(timeCycle, function(event) {
