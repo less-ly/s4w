@@ -6,7 +6,7 @@
 Persistent and heliocentric.
 
 A watchface that tells relative planet positions across time in space based on actual
-data computed with Python3 [Skifield](https://rhodesmill.org/skyfield/).
+data computed with Python3 [Skyfield](https://rhodesmill.org/skyfield/).
 
 Features 8 major planets and the Sun.
 
